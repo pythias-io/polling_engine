@@ -1,4 +1,6 @@
+import json
 import redis
+import requests
 import datetime
 from polling_engine.src import config
 from db_utilities.mysql.core import run_query
@@ -45,16 +47,32 @@ class Message(object):
             print "something's missing"
 
     def get_sentiment(self, ):
-        sentiment = {'polarity': 'positive',
-                'score': '0.7569'}
-        
-        print "%s - sentiment {polarity}|{score}".format(**sentiment) % self.msg['id']
+        '''
+        return sentiment polarity and score
+        '''
+        sentiment = {}
+        payload = dict(
+                apikey=config.ALCHEMY['API_KEY'],
+                text=str(self.msg['text']),
+                outputMode='json',
+                showSourceText=1
+                )
+        print "{} - params sending to alchemy: {}".format(self.msg['id'], payload)
+        resp = requests.post(config.ALCHEMY['BASE'], params=payload)
+        print "{} - Alchemy resp: {}".format(self.msg['id'], str(resp.content))
+        if resp.status_code == 200:
+            resp_body = json.loads(resp.content)
+            if 'docSentiment' in resp_body:
+                sentiment = resp_body['docSentiment']
+
+
+        print "{} - sentiment result: {}".format(self.msg['id'], sentiment)
         return sentiment
 
 
     def update(self, sentiment):
         update_query = config.MYSQL_CONFIG['UPDATE'] % (
-                sentiment['polarity'], sentiment['score'], self.msg['id']
+                sentiment['type'], sentiment['score'], self.msg['id']
                 )
         resp = run_query(update_query, db='sentiments')
 
@@ -71,7 +89,7 @@ class Message(object):
         '''
         updates count on redis
         '''
-        polarity = sentiment['polarity']
+        polarity = sentiment['type']
         key = config.REDIS_CONFIG['COUNT_KEY'][polarity.upper()]
         resp = self.rds.incr(key.format(self.msg['poll_id']))
         print "{} - incr {} by 1 to {}".format(self.msg['id'], key, resp)

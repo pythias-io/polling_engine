@@ -22,8 +22,9 @@ class Listener(threading.Thread):
             message.is_valid()
             if message.valid:
                 sentiment = message.get_sentiment()
-                message.update(sentiment)
-                message.count(sentiment)
+                if sentiment:
+                    message.update(sentiment)
+                    message.count(sentiment)
             else:
                 print "invalid message - %s" % item
 

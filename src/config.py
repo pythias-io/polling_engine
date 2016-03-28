@@ -25,5 +25,9 @@ MYSQL_CONFIG = dict(
         update messages set sentiment_polarity = '%s', 
         sentiment_score = '%s' where messageid = %s
         """,
-        
+        )
+
+ALCHEMY = dict(
+        BASE='http://gateway-a.watsonplatform.net/calls/text/TextGetTextSentiment',
+        API_KEY=os.getenv('ALCHEMY_API_KEY')
         )
