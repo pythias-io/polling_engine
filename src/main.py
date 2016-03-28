@@ -15,9 +15,10 @@ class Listener(threading.Thread):
         self.pubsub.subscribe(channels)
     
     def work(self, item):
-        logging.info("received {data} from {channel}".format(**item))
+        print "received {data} from {channel}".format(**item)
         try:
-            message = core.Message(item['data'])
+            params = core.normalise(item['data'])
+            message = core.Message(str(params))
             message.is_valid()
             if message.valid:
                 sentiment = message.get_sentiment()

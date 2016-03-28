@@ -1,16 +1,35 @@
 import redis
+import datetime
 from polling_engine.src import config
 from db_utilities.mysql.core import run_query
+
+def normalise(parameters):
+    '''
+    '''
+    params = eval(parameters)
+    channel = params['client']
+    if channel == 'twitter':
+        new_struct = dict(
+                id=params['request_id'],
+                text=params['message'],
+                name=params['username'],
+                user_id=params['sender_id'],
+                poll_id=params['poll_id'],
+                client='twitter'
+                )
+    return new_struct
+
 
 class Message(object):
 
     def __init__(self, msg):
         try:
             self.msg = eval(msg)
-        except:
-            print "message cannot eval -- %s" % msg
+        except Exception, err:
+            print "message cannot eval: %s -- %s" % (err, msg)
             self.msg = {}
         self.rds = redis.StrictRedis(**config.REDIS_CONFIG['CONN'])
+
 
     def is_valid(self, ):
         self.valid = False
@@ -20,7 +39,7 @@ class Message(object):
             assert 'name' in self.msg
             assert 'user_id' in self.msg
             assert 'poll_id' in self.msg
-            assert 'channel' in self.msg
+            assert 'client' in self.msg
             self.valid = True
         except AssertionError:
             print "something's missing"
@@ -37,7 +56,7 @@ class Message(object):
         update_query = config.MYSQL_CONFIG['UPDATE'] % (
                 sentiment['polarity'], sentiment['score'], self.msg['id']
                 )
-        resp = run_query(update_query)
+        resp = run_query(update_query, db='sentiments')
 
         if not resp['ok']:
             print "ERROR: {} update db -- {}".format(self.msg['id'], resp)
