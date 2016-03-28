@@ -62,8 +62,10 @@ class Message(object):
         print "{} - Alchemy resp: {}".format(self.msg['id'], str(resp.content))
         if resp.status_code == 200:
             resp_body = json.loads(resp.content)
-            if 'docSentiment' in resp_body:
+            if 'docSentiment' in resp_body and resp_body['language'] == 'english':
                 sentiment = resp_body['docSentiment']
+                if 'type' in resp_body['docSentiment'] and 'score' not in resp_body['docSentiment']:
+                    sentiment['score'] = config.ALCHEMY['DEFAULT_POLARITY_SCORES'][(sentiment['type'])]
 
 
         print "{} - sentiment result: {}".format(self.msg['id'], sentiment)

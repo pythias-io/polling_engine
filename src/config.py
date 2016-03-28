@@ -29,5 +29,10 @@ MYSQL_CONFIG = dict(
 
 ALCHEMY = dict(
         BASE='http://gateway-a.watsonplatform.net/calls/text/TextGetTextSentiment',
-        API_KEY=os.getenv('ALCHEMY_API_KEY')
+        API_KEY=os.getenv('ALCHEMY_API_KEY'),
+        DEFAULT_POLARITY_SCORES=dict(
+            positive='0.5',
+            neutral='0',
+            negative='-0.5'
+            )
         )
